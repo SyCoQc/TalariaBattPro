@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Batterie Talaria</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+:root{
+  --bg:#0f1115; --card:#181b22; --card2:#1f232c; --line:#2a2f3a;
+  --text:#e9ecf1; --muted:#8b93a3; --accent:#3ddc97; --warn:#ffb020; --bad:#ff5468; --info:#4aa8ff;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px)}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:center;gap:10px}
+header h1{font-size:20px;margin:0;flex:1;letter-spacing:.2px;min-width:0}
+header h1 small{display:block;font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.dot.busy{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+button{font:inherit;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;cursor:pointer}
+button.primary{background:var(--accent);color:#06281a;border-color:transparent;font-weight:650}
+button.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+button.lang{padding:8px 10px;font-size:13px;font-weight:650;flex:none}
+button:disabled{opacity:.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card h2{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hero{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center}
+.ring{position:relative;width:150px;height:150px}
+.ring svg{transform:rotate(-90deg)}
+.ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring .val b{font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.ring .val span{font-size:12px;color:var(--muted);margin-top:4px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card2);border-radius:12px;padding:10px 12px}
+.stat label{display:block;font-size:12px;color:var(--muted)}
+.stat b{font-size:20px;font-variant-numeric:tabular-nums}
+.stat b small{font-size:13px;color:var(--muted);font-weight:500;margin-left:2px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cells{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cell{background:var(--card2);border-radius:10px;padding:8px 6px;text-align:center;border:1px solid transparent}
+.cell i{display:block;font-style:normal;font-size:11px;color:var(--muted)}
+.cell b{font-size:15px;font-variant-numeric:tabular-nums}
+.cell.max{border-color:var(--info)}
+.cell.min{border-color:var(--warn)}
+.row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row span{color:var(--muted)}
+.row b{text-align:right;font-weight:550;font-variant-numeric:tabular-nums;word-break:break-all}
+.alarms{display:flex;flex-direction:column;gap:6px}
+.alarm{padding:8px 10px;border-radius:10px;font-size:14px}
+.alarm.err{background:rgba(255,84,104,.12);color:var(--bad)}
+.alarm.warn{background:rgba(255,176,32,.12);color:var(--warn)}
+.alarm.ok{background:rgba(61,220,151,.1);color:var(--accent)}
+.badge{font-size:11px;padding:3px 8px;border-radius:99px;background:var(--card2);color:var(--muted);text-transform:none;letter-spacing:0}
+#welcome p{color:var(--muted);margin:0 0 12px}
+#welcome .actions{display:flex;gap:10px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:6px;margin:4px 0 14px}
+.field label{font-size:13px;color:var(--muted)}
+.field input{font:inherit;font-size:16px;color:var(--text);background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 12px;text-transform:uppercase;letter-spacing:.5px;width:100%}
+.field input:focus{outline:none;border-color:var(--accent)}
+.field small{color:var(--muted);font-size:12px}
+#log{font:12px/1.35 ui-monospace,Consolas,monospace;background:#0a0c10;border-radius:10px;padding:10px;max-height:260px;overflow:auto;white-space:pre-wrap;color:#9fb0c6;margin:0}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+details[open] summary{margin-bottom:12px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.toolbar button{padding:6px 10px;font-size:13px}
+.hidden{display:none!important}
+.err-box{background:rgba(255,84,104,.12);color:var(--bad);padding:12px;border-radius:12px}
+.warn-box{background:rgba(255,176,32,.12);color:var(--warn);padding:12px;border-radius:12px}
+.muted{color:var(--muted);font-size:13px}
+@media (max-width:420px){
+  .hero{grid-template-columns:1fr;justify-items:center}
+  .stats{width:100%}
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span id="dot" class="dot"></span>
+    <h1 data-i18n="title">Batterie Talaria<small id="status"></small></h1>
+    <button id="btnLang" class="lang" aria-label="Language">EN</button>
+    <button id="btnConnect" class="primary" data-i18n="connect">Connecter</button>
+    <button id="btnDisconnect" class="danger hidden" data-i18n="disconnect">Déconnecter</button>
+  </header>
+
+  <div id="snWarn" class="warn-box hidden"></div>
+
+  <section id="welcome" class="card">
+    <p data-i18n="intro"></p>
+    <div class="field">
+      <label for="snInput" data-i18n="snLabel"></label>
+      <input id="snInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="FV1AT…">
+      <small id="snHint"></small>
+    </div>
+    <div class="actions">
+      <button id="btnList" data-i18n="showAll"></button>
+      <button id="btnDemo" data-i18n="demo"></button>
+    </div>
+    <p class="muted" style="margin:12px 0 0" data-i18n="readOnly"></p>
+    <div id="noBle" class="err-box hidden" style="margin-top:12px"></div>
+  </section>
+
+  <section id="dash" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="card">
+      <div class="hero">
+        <div class="ring">
+          <svg width="150" height="150" viewBox="0 0 150 150">
+            <circle cx="75" cy="75" r="64" fill="none" stroke="#262b35" stroke-width="12"/>
+            <circle id="socArc" cx="75" cy="75" r="64" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="402.1" stroke-dashoffset="402.1" style="transition:stroke-dashoffset .6s,stroke .3s"/>
+          </svg>
+          <div class="val"><b id="soc">–</b><span id="mode">%</span></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><label data-i18n="voltage"></label><b id="volt">–<small>V</small></b></div>
+          <div class="stat"><label data-i18n="current"></label><b id="curr">–<small>A</small></b></div>
+          <div class="stat"><label data-i18n="power"></label><b id="power">–<small>W</small></b></div>
+          <div class="stat"><label data-i18n="remaining"></label><b id="remain">–<small>Ah</small></b></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="temps"></h2>
+      <div class="grid3">
+        <div class="stat"><label data-i18n="tCell1"></label><b id="t0">–<small>°C</small></b></div>
+        <div class="stat"><label data-i18n="tCell2"></label><b id="t1">–<small>°C</small></b></div>
+        <div class="stat"><label data-i18n="tCell3"></label><b id="t2">–<small>°C</small></b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span data-i18n="cells"></span> <span class="badge" id="cellSummary">–</span></h2>
+      <div class="cells" id="cells"></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="alarms"></h2>
+      <div class="alarms" id="alarms"></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="capacity"></h2>
+      <div class="row"><span data-i18n="soh"></span><b id="soh">–</b></div>
+      <div class="row"><span data-i18n="capRem"></span><b id="capRem">–</b></div>
+      <div class="row"><span data-i18n="capFull"></span><b id="capFull">–</b></div>
+      <div class="row"><span data-i18n="capDesign"></span><b id="capDesign">–</b></div>
+      <div class="row"><span data-i18n="voltDesign"></span><b id="voltDesign">–</b></div>
+      <div class="row"><span data-i18n="cycles"></span><b id="cycles">–</b></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="history"></h2>
+      <div class="row"><span data-i18n="hMaxDis"></span><b id="hMaxDis">–</b></div>
+      <div class="row"><span data-i18n="hMaxChg"></span><b id="hMaxChg">–</b></div>
+      <div class="row"><span data-i18n="hCellMax"></span><b id="hCellMax">–</b></div>
+      <div class="row"><span data-i18n="hCellMin"></span><b id="hCellMin">–</b></div>
+      <div class="row"><span data-i18n="hTMax"></span><b id="hTMax">–</b></div>
+      <div class="row"><span data-i18n="hTMin"></span><b id="hTMin">–</b></div>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="info"></h2>
+      <div class="row"><span data-i18n="sn"></span><b id="sn">–</b></div>
+      <div class="row"><span data-i18n="manu"></span><b id="manu">–</b></div>
+      <div class="row"><span data-i18n="desc"></span><b id="desc">–</b></div>
+      <div class="row"><span data-i18n="cellType"></span><b id="cellType">–</b></div>
+      <div class="row"><span>IDX</span><b id="idx">–</b></div>
+      <div class="row"><span data-i18n="sw"></span><b id="sw">–</b></div>
+      <div class="row"><span data-i18n="hw"></span><b id="hw">–</b></div>
+      <div class="row"><span data-i18n="mdate"></span><b id="mdate">–</b></div>
+      <div class="row"><span data-i18n="rtc"></span><b id="rtc">–</b></div>
+      <div class="row"><span data-i18n="devName"></span><b id="devName">–</b></div>
+    </div>
+  </section>
+
+  <details class="card" id="debug">
+    <summary data-i18n="log"></summary>
+    <div class="toolbar">
+      <button id="btnCopyLog" data-i18n="copyLog"></button>
+      <button id="btnClearLog" data-i18n="clearLog"></button>
+      <label class="muted" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="chkFrames"> <span data-i18n="showFrames"></span></label>
+    </div>
+    <pre id="log"></pre>
+  </details>
+</main>
+
+<script>
+'use strict';
+
+/* ------------------------------------------------------------------ *
+ *  Langues                                                           *
+ * ------------------------------------------------------------------ */
+const I18N = {
+  fr: {
+    title: 'Batterie Talaria', connect: 'Connecter', disconnect: 'Déconnecter',
+    intro: 'Allume la moto (ou réveille la batterie), active le Bluetooth du téléphone, puis appuie sur Connecter.',
+    snLabel: 'Numéro de série de la batterie',
+    snHintEmpty: 'Laisse vide pour choisir la batterie dans la liste.',
+    snHintSet: 'Seule cette batterie sera proposée à la connexion.',
+    snHintLearned: 'Batterie reconnue (nom Bluetooth : {name}).',
+    showAll: 'Afficher toutes les batteries', demo: 'Mode démo',
+    readOnly: 'Lecture seule : l\'app n\'envoie que des demandes de lecture au BMS, jamais de réglage.',
+    voltage: 'Tension', current: 'Courant', power: 'Puissance', remaining: 'Restant',
+    charging: 'en charge', discharging: 'en décharge', idle: 'au repos',
+    temps: 'Températures', tCell1: 'Cellules 1', tCell2: 'Cellules 2', tCell3: 'Cellules 3', tBoard: 'Carte / MOS',
+    cells: 'Cellules', cellSummary: '{n} cellules · écart {d} mV',
+    alarms: 'Alarmes', noAlarm: 'Aucune alarme', warnPrefix: 'Avertissement : ',
+    capacity: 'Capacité et santé', soh: 'Santé (SOH)', capRem: 'Capacité restante', capFull: 'Capacité pleine charge',
+    capDesign: 'Capacité nominale', voltDesign: 'Tension nominale', cycles: 'Cycles',
+    history: 'Historique (enregistré par le BMS)', hMaxDis: 'Courant max en décharge', hMaxChg: 'Courant max en charge',
+    hCellMax: 'Cellule la plus haute', hCellMin: 'Cellule la plus basse', hTMax: 'Température max', hTMin: 'Température min',
+    info: 'Informations', sn: 'Numéro de série', manu: 'Fabricant', desc: 'Description', cellType: 'Type de cellule',
+    sw: 'Version logicielle', hw: 'Version matérielle', mdate: 'Date de fabrication', rtc: 'Horloge BMS', devName: 'Appareil Bluetooth',
+    log: 'Journal technique', copyLog: 'Copier le journal', clearLog: 'Effacer', showFrames: 'Afficher les trames',
+    stDisconnected: 'Déconnecté', stConnecting: 'Connexion…', stReading: 'Lecture des informations…', stConnected: 'Connecté · {name}',
+    stLost: 'Batterie déconnectée',
+    snMismatch: 'Attention : cette batterie a le numéro de série {got}, différent de celui enregistré ({want}).',
+    snNotFound: 'Aucune batterie avec ce numéro de série n\'a été trouvée. Vérifie le numéro ou utilise « Afficher toutes les batteries ».',
+    connectFail: 'Connexion impossible : ',
+    noBleIOS: 'Safari ne gère pas le Bluetooth web. Sur iPhone, ouvre cette page dans l\'app <b>Bluefy</b> (gratuite sur l\'App Store).',
+    noBle: 'Ce navigateur ne gère pas le Bluetooth web. Utilise <b>Chrome</b> sur Android (page servie en HTTPS ou via localhost).',
+    errors: [
+      ['Défaut puce de protection','Perte de cellule','Déséquilibre des cellules','Erreur d\'estimation SOC','Erreur d\'enregistrement','Erreur horloge (RTC)','Défaut MOSFET décharge','Défaut MOSFET charge'],
+      ['Surtension (surcharge)','Sous-tension niveau 1','Sous-tension niveau 2','Surintensité décharge niveau 1','Surintensité décharge niveau 2','Surintensité de charge','Échec du pré-démarrage','Pré-charge trop longue'],
+      ['Défaut capteur temp. MOS','Défaut capteur temp. cellules','Surchauffe en décharge','Surchauffe en charge','Trop froid pour décharger','Trop froid pour charger','Surchauffe MOSFET décharge','Surchauffe MOSFET charge'],
+      ['Surchauffe circuit de pré-démarrage','Erreur ROM','Fusible de décharge grillé','Fusible de charge grillé','Surintensité niveau 3','Surintensité niveau 4','Erreur de configuration',null],
+    ],
+    warnings: [
+      ['Puce de protection','Perte de cellule','Déséquilibre des cellules','Estimation SOC','Enregistrement','Horloge (RTC)',null,null],
+      ['Surcharge','Sous-tension','Pré-charge longue',null,null,'Courant de charge élevé',null,null],
+      ['Capteur temp. MOS','Capteur temp. cellules','Température haute en décharge','Température haute en charge','Température basse en décharge','Température basse en charge','MOSFET décharge chaud','MOSFET charge chaud'],
+      ['Circuit de pré-démarrage chaud','ROM',null,null,null,null,null,null],
+    ],
+  },
+  en: {
+    title: 'Talaria Battery', connect: 'Connect', disconnect: 'Disconnect',
+    intro: 'Turn the bike on (or wake the battery up), enable Bluetooth on your phone, then tap Connect.',
+    snLabel: 'Battery serial number',
+    snHintEmpty: 'Leave empty to pick the battery from the list.',
+    snHintSet: 'Only this battery will be offered for connection.',
+    snHintLearned: 'Battery recognized (Bluetooth name: {name}).',
+    showAll: 'Show all batteries', demo: 'Demo mode',
+    readOnly: 'Read-only: the app only sends read requests to the BMS, never settings.',
+    voltage: 'Voltage', current: 'Current', power: 'Power', remaining: 'Remaining',
+    charging: 'charging', discharging: 'discharging', idle: 'idle',
+    temps: 'Temperatures', tCell1: 'Cells 1', tCell2: 'Cells 2', tCell3: 'Cells 3', tBoard: 'Board / MOS',
+    cells: 'Cells', cellSummary: '{n} cells · spread {d} mV',
+    alarms: 'Alarms', noAlarm: 'No alarm', warnPrefix: 'Warning: ',
+    capacity: 'Capacity and health', soh: 'Health (SOH)', capRem: 'Remaining capacity', capFull: 'Full charge capacity',
+    capDesign: 'Design capacity', voltDesign: 'Nominal voltage', cycles: 'Cycles',
+    history: 'History (recorded by the BMS)', hMaxDis: 'Max discharge current', hMaxChg: 'Max charge current',
+    hCellMax: 'Highest cell', hCellMin: 'Lowest cell', hTMax: 'Max temperature', hTMin: 'Min temperature',
+    info: 'Information', sn: 'Serial number', manu: 'Manufacturer', desc: 'Description', cellType: 'Cell type',
+    sw: 'Software version', hw: 'Hardware version', mdate: 'Manufacturing date', rtc: 'BMS clock', devName: 'Bluetooth device',
+    log: 'Technical log', copyLog: 'Copy log', clearLog: 'Clear', showFrames: 'Show frames',
+    stDisconnected: 'Disconnected', stConnecting: 'Connecting…', stReading: 'Reading information…', stConnected: 'Connected · {name}',
+    stLost: 'Battery disconnected',
+    snMismatch: 'Warning: this battery has serial number {got}, which differs from the saved one ({want}).',
+    snNotFound: 'No battery with this serial number was found. Check the number or use "Show all batteries".',
+    connectFail: 'Connection failed: ',
+    noBleIOS: 'Safari does not support Web Bluetooth. On iPhone, open this page in the <b>Bluefy</b> app (free on the App Store).',
+    noBle: 'This browser does not support Web Bluetooth. Use <b>Chrome</b> on Android (page served over HTTPS or localhost).',
+    errors: [
+      ['Protection chip fault','Cell dropout','Cell imbalance','SOC estimation error','Recording error','Clock (RTC) error','Discharge MOSFET fault','Charge MOSFET fault'],
+      ['Overvoltage (overcharge)','Undervoltage level 1','Undervoltage level 2','Discharge overcurrent level 1','Discharge overcurrent level 2','Charge overcurrent','Pre-start failed','Pre-charge timeout'],
+      ['MOS temp. sensor fault','Cell temp. sensor fault','Over-temperature while discharging','Over-temperature while charging','Too cold to discharge','Too cold to charge','Discharge MOSFET over-temperature','Charge MOSFET over-temperature'],
+      ['Pre-start circuit over-temperature','ROM error','Discharge fuse blown','Charge fuse blown','Overcurrent level 3','Overcurrent level 4','Configuration error',null],
+    ],
+    warnings: [
+      ['Protection chip','Cell dropout','Cell imbalance','SOC estimation','Recording','Clock (RTC)',null,null],
+      ['Overcharge','Undervoltage','Long pre-charge',null,null,'High charge current',null,null],
+      ['MOS temp. sensor','Cell temp. sensor','High temperature while discharging','High temperature while charging','Low temperature while discharging','Low temperature while charging','Discharge MOSFET hot','Charge MOSFET hot'],
+      ['Pre-start circuit hot','ROM',null,null,null,null,null,null],
+    ],
+  },
+};
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (_) {} },
+};
+let lang = store.get('lang') || 'fr';
+const t = (k, vars) => {
+  let s = (I18N[lang] && I18N[lang][k]) ?? I18N.fr[k] ?? k;
+  if (vars) for (const [a, b] of Object.entries(vars)) s = s.replace(`{${a}}`, b);
+  return s;
+};
+
+/* ------------------------------------------------------------------ *
+ *  Protocole (voir PROTOCOLE.md)                                      *
+ * ------------------------------------------------------------------ */
+const B = (s) => `0000${s}-0000-1000-8000-00805f9b34fb`;
+const UUID_SETS = [
+  { svc: B('fff0'), notify: B('fff1'), write: B('fff1') },
+  { svc: '0000e0ff-3c17-d293-8e48-14fe2e4da212', notify: B('ffe2'), write: B('ffe1') },
+  { svc: '1b7e8251-2877-41c3-b46e-cf057c562023', notify: '8ac32d3f-5cb9-4d44-bec2-ee689169f626', write: '5e9bf2a8-f93f-4481-a67e-3b2f4a07891a' },
+];
+
+// Registres lus en boucle, et registres lus une seule fois à la connexion.
+const FAST = [[0x08,32],[0x09,4],[0x0A,4],[0x0D,4],[0x0E,4],[0x0F,4],[0x10,4],[0x16,16],[0x24,32],[0x25,32]];
+const SLOW = [[0x23,16],[0x17,4],[0x18,4],[0x19,4],[0x1A,8],[0x1B,4],[0x1D,6],[0x20,16],[0x21,32],[0x22,16],[0x26,14]];
+
+const sum8 = (a, from, to) => { let s = 0; for (let i = from; i < to; i++) s += a[i]; return s & 0xFF; };
+function buildRead(reg, len) {
+  const f = [0x46, 0x16, 0x01, reg, len, 0];
+  f[5] = sum8(f, 0, 5);
+  return new Uint8Array(f);
+}
+const hex = (a) => Array.from(a, b => b.toString(16).padStart(2, '0')).join(' ');
+const u16 = (a, o) => a[o] | (a[o+1] << 8);
+const i32 = (a, o) => a[o] | (a[o+1] << 8) | (a[o+2] << 16) | (a[o+3] << 24);
+const u32 = (a, o) => i32(a, o) >>> 0;
+const i8  = (a, o) => (a[o] << 24) >> 24;
+const ascii = (a) => String.fromCharCode(...a).replace(/[^\x20-\x7e]/g, '').trim();
+const normSn = (s) => (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+/* Réception : accumule les notifications et extrait les trames 47 16 01 ... */
+class FrameParser {
+  constructor() { this.buf = new Uint8Array(0); this.waiter = null; }
+  push(chunk) {
+    const n = new Uint8Array(this.buf.length + chunk.length);
+    n.set(this.buf); n.set(chunk, this.buf.length);
+    this.buf = n.length > 512 ? n.slice(-512) : n;
+    this.tryParse();
+  }
+  reset() { this.buf = new Uint8Array(0); }
+  tryParse() {
+    while (this.buf.length >= 6) {
+      if (this.buf[0] !== 0x47 || this.buf[1] !== 0x16) { this.buf = this.buf.slice(1); continue; }
+      const len = this.buf[4];
+      const total = len + 6;
+      if (this.buf.length < total) return;
+      const frame = this.buf.slice(0, total);
+      if (sum8(frame, 0, total - 1) !== frame[total - 1]) {
+        log(`Checksum ✗ ${hex(frame)}`);
+        this.buf = this.buf.slice(1);
+        continue;
+      }
+      this.buf = this.buf.slice(total);
+      if (showFrames()) log(`RX ${hex(frame)}`);
+      if (this.waiter && this.waiter.reg === frame[3]) {
+        const w = this.waiter; this.waiter = null;
+        w.resolve(frame.slice(5, 5 + len));
+      }
+    }
+  }
+  wait(reg, ms) {
+    return new Promise((resolve, reject) => {
+      const tm = setTimeout(() => { if (this.waiter && this.waiter.tm === tm) this.waiter = null; reject(new Error('timeout')); }, ms);
+      this.waiter = { reg, tm, resolve: (d) => { clearTimeout(tm); resolve(d); } };
+    });
+  }
+}
+
+/* Transport Bluetooth réel (Web Bluetooth) */
+class BleTransport {
+  // filters : null = toutes les batteries ; sinon liste de filtres Web Bluetooth (par nom)
+  constructor(filters) { this.filters = filters; this.parser = new FrameParser(); this.device = null; this.onDisconnect = null; }
+  async pick() {
+    const optionalServices = UUID_SETS.map(s => s.svc);
+    // Reconnexion directe si le navigateur se souvient déjà de l'appareil (Chrome récent)
+    if (this.filters && navigator.bluetooth.getDevices) {
+      try {
+        const known = await navigator.bluetooth.getDevices();
+        const names = this.filters.map(f => f.name).filter(Boolean);
+        const d = known.find(k => k.name && names.includes(k.name));
+        if (d) { log(`Known device: ${d.name}`); return d; }
+      } catch (_) {}
+    }
+    return navigator.bluetooth.requestDevice(this.filters
+      ? { filters: this.filters, optionalServices }
+      : { acceptAllDevices: true, optionalServices });
+  }
+  async connect() {
+    this.device = await this.pick();
+    this.device.addEventListener('gattserverdisconnected', () => this.onDisconnect && this.onDisconnect());
+    log(`Device: ${this.device.name || '(no name)'} – connecting…`);
+    const server = await this.device.gatt.connect();
+    let lastErr;
+    for (const set of UUID_SETS) {
+      try {
+        const svc = await server.getPrimaryService(set.svc);
+        this.rx = await svc.getCharacteristic(set.notify);
+        this.tx = set.write === set.notify ? this.rx : await svc.getCharacteristic(set.write);
+        this.rx.addEventListener('characteristicvaluechanged', (e) => {
+          const v = e.target.value;
+          this.parser.push(new Uint8Array(v.buffer, v.byteOffset, v.byteLength));
+        });
+        await this.rx.startNotifications();
+        log(`Service: ${set.svc}`);
+        return this.device.name || 'BLE';
+      } catch (e) { lastErr = e; }
+    }
+    throw new Error('Battery service not found (' + (lastErr && lastErr.message) + ')');
+  }
+  async send(frame) {
+    if (showFrames()) log(`TX ${hex(frame)}`);
+    const p = this.tx.properties;
+    if (p.write || !p.writeWithoutResponse) await this.tx.writeValueWithResponse(frame);
+    else await this.tx.writeValueWithoutResponse(frame);
+  }
+  disconnect() { if (this.device && this.device.gatt.connected) this.device.gatt.disconnect(); }
+  get connected() { return !!(this.device && this.device.gatt.connected); }
+  get bleName() { return this.device && this.device.name; }
+}
+
+/* Transport de démonstration : simule une batterie 16S, passe par le même décodeur */
+class DemoTransport {
+  constructor() { this.parser = new FrameParser(); this.on = false; this.t0 = Date.now(); }
+  async connect() { this.on = true; return 'Demo'; }
+  disconnect() { this.on = false; this.onDisconnect && this.onDisconnect(); }
+  get connected() { return this.on; }
+  get bleName() { return null; }
+  data(reg, len) {
+    const d = new Uint8Array(len);
+    const dv = new DataView(d.buffer);
+    const s = (Date.now() - this.t0) / 1000;
+    const cur = Math.round(-18000 + 9000 * Math.sin(s / 4));
+    const str = (x) => { for (let i = 0; i < Math.min(x.length, len); i++) d[i] = x.charCodeAt(i); };
+    switch (reg) {
+      case 0x08: [27, 28, 26, 34, 0, 0, 25].forEach((v, i) => d[i] = v & 0xFF); break;
+      case 0x09: dv.setUint32(0, 64280 + Math.round(cur / 40), true); break;
+      case 0x0A: dv.setInt32(0, cur, true); break;
+      case 0x0D: d[0] = 76; break;
+      case 0x0E: d[0] = 97; break;
+      case 0x0F: dv.setUint32(0, 28880, true); break;
+      case 0x10: dv.setUint32(0, 38000, true); break;
+      case 0x16: d[6] = (s % 20 > 10) ? 0x04 : 0; break;
+      case 0x17: dv.setUint32(0, 42, true); break;
+      case 0x18: dv.setUint32(0, 38000, true); break;
+      case 0x19: dv.setUint32(0, 60000, true); break;
+      case 0x1A: d.set([5, 1, 2, 1, 77, 88, 51, 0]); break;
+      case 0x1B: d.set([23, 6, 14]); break;
+      case 0x1D: d.set([26, 11, 21, 14, 30, 0]); break;
+      case 0x20: str('GREENWAY'); break;
+      case 0x21: str('DEMO PACK 60V 38AH'); break;
+      case 0x22: str('LI-ION NCM 21700'); break;
+      case 0x23: str('FV1AT0DEMO000001'); break;
+      case 0x24: for (let i = 0; i < 16; i++) dv.setUint16(i * 2, 4015 + ((i * 7) % 13) - (i === 9 ? 18 : 0), true); break;
+      case 0x26: dv.setInt32(0, 98000, true); dv.setInt32(4, 12000, true); dv.setUint16(8, 4198, true); dv.setUint16(10, 3120, true); d[12] = 48; d[13] = 0xFB; break;
+    }
+    return d;
+  }
+  async send(frame) {
+    if (showFrames()) log(`TX ${hex(frame)}`);
+    const reg = frame[3], len = frame[4];
+    const resp = new Uint8Array(len + 6);
+    resp.set([0x47, 0x16, 0x01, reg, len]); resp.set(this.data(reg, len), 5);
+    resp[len + 5] = sum8(resp, 0, len + 5);
+    setTimeout(() => { for (let i = 0; i < resp.length; i += 20) this.parser.push(resp.slice(i, i + 20)); }, 30);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Lecture des registres                                             *
+ * ------------------------------------------------------------------ */
+let transport = null;
+let polling = false;
+let lastFast = null, lastSlow = null;
+
+async function readReg(reg, len, timeout = 400, tries = 4) {
+  for (let i = 0; i < tries; i++) {
+    if (!transport || !transport.connected) throw new Error('disconnected');
+    transport.parser.reset();
+    const p = transport.parser.wait(reg, timeout);
+    try {
+      await transport.send(buildRead(reg, len));
+      return await p;
+    } catch (e) {
+      p.catch(() => {});
+      if (i === tries - 1) throw new Error(`reg 0x${reg.toString(16)}: ${e.message}`);
+    }
+  }
+}
+
+async function readSet(list) {
+  const out = {};
+  for (const [reg, len] of list) {
+    try { out[reg] = await readReg(reg, len); }
+    catch (e) { log(`⚠ ${e.message}`); if (!transport || !transport.connected) throw e; }
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Décodage et affichage                                              *
+ * ------------------------------------------------------------------ */
+const $ = (id) => document.getElementById(id);
+const setTxt = (id, v) => { $(id).textContent = v; };
+const setVal = (id, v, unit) => { $(id).innerHTML = `${v}<small>${unit}</small>`; };
+const fmtAh = (mah) => `${(mah / 1000).toFixed(1)} Ah`;
+
+function decodeAlarms(st) {
+  const list = [], E = t('errors'), W = t('warnings');
+  for (let b = 0; b < 4; b++) for (let bit = 0; bit < 8; bit++)
+    if (E[b][bit] && (st[2 + b] >> bit) & 1) list.push(['err', E[b][bit]]);
+  for (let b = 0; b < 4; b++) for (let bit = 0; bit < 8; bit++)
+    if (W[b][bit] && (st[6 + b] >> bit) & 1) list.push(['warn', t('warnPrefix') + W[b][bit]]);
+  return list;
+}
+
+function renderFast(r) {
+  lastFast = Object.assign(lastFast || {}, r);
+  let voltV = null, currA = null;
+  if (r[0x09]) { voltV = u32(r[0x09], 0) / 1000; setVal('volt', voltV.toFixed(1), 'V'); }
+  if (r[0x0A]) {
+    currA = i32(r[0x0A], 0) / 1000;
+    if (Math.abs(currA) < 0.05) currA = 0;
+    setVal('curr', currA.toFixed(1), 'A');
+    setTxt('mode', currA > 0.1 ? t('charging') : currA < -0.1 ? t('discharging') : t('idle'));
+  }
+  if (voltV !== null && currA !== null) setVal('power', Math.round(voltV * currA), 'W');
+  if (r[0x0D]) {
+    const soc = r[0x0D][0];
+    setTxt('soc', soc + '%');
+    const arc = $('socArc');
+    arc.style.strokeDashoffset = 402.1 * (1 - Math.min(soc, 100) / 100);
+    arc.style.stroke = soc < 20 ? 'var(--bad)' : soc < 40 ? 'var(--warn)' : 'var(--accent)';
+  }
+  if (r[0x0E]) setTxt('soh', r[0x0E][0] + ' %');
+  if (r[0x0F]) { const v = u32(r[0x0F], 0); setVal('remain', (v / 1000).toFixed(1), 'Ah'); setTxt('capRem', fmtAh(v)); }
+  if (r[0x10]) setTxt('capFull', fmtAh(u32(r[0x10], 0)));
+  if (r[0x08]) for (const i of [0, 1, 2]) setVal('t' + i, i8(r[0x08], i), '°C');
+  if (r[0x24]) {
+    const cells = [];
+    for (let i = 0; i < 16; i++) cells.push(u16(r[0x24], i * 2));
+    if (r[0x25]) for (let i = 0; i < 16; i++) cells.push(u16(r[0x25], i * 2));
+    const valid = cells.map((v, i) => [i, v]).filter(([, v]) => v > 0 && v < 6000);
+    if (valid.length) {
+      const vals = valid.map(([, v]) => v);
+      const max = Math.max(...vals), min = Math.min(...vals);
+      setTxt('cellSummary', t('cellSummary', { n: valid.length, d: max - min }));
+      $('cellSummary').style.color = (max - min) > 50 ? 'var(--warn)' : '';
+      $('cells').innerHTML = valid.map(([i, v]) =>
+        `<div class="cell ${v === max ? 'max' : v === min ? 'min' : ''}"><i>#${i + 1}</i><b>${(v / 1000).toFixed(3)}</b></div>`).join('');
+    }
+  }
+  if (r[0x16]) {
+    const list = decodeAlarms(r[0x16]);
+    $('alarms').innerHTML = list.length
+      ? list.map(([c, s]) => `<div class="alarm ${c}">${s}</div>`).join('')
+      : `<div class="alarm ok">${t('noAlarm')}</div>`;
+  }
+}
+
+function renderSlow(r) {
+  lastSlow = Object.assign(lastSlow || {}, r);
+  if (r[0x17]) setTxt('cycles', u32(r[0x17], 0));
+  if (r[0x18]) setTxt('capDesign', fmtAh(u32(r[0x18], 0)));
+  if (r[0x19]) { const v = u32(r[0x19], 0); setTxt('voltDesign', v > 1000 ? (v / 1000).toFixed(1) + ' V' : v + ' V'); }
+  if (r[0x1A]) {
+    const a = r[0x1A];
+    setTxt('sw', `${a[1]}.${a[0]}`);
+    setTxt('hw', `${a[3]}.${a[2]}`);
+    setTxt('idx', ascii(a.slice(4, 8)) || '–');
+  }
+  const p = (x) => String(x).padStart(2, '0');
+  if (r[0x1B]) { const a = r[0x1B]; setTxt('mdate', `20${p(a[0])}-${p(a[1])}-${p(a[2])}`); }
+  if (r[0x1D]) { const a = r[0x1D]; setTxt('rtc', `20${p(a[0])}-${p(a[1])}-${p(a[2])} ${p(a[3])}:${p(a[4])}:${p(a[5])}`); }
+  if (r[0x20]) setTxt('manu', ascii(r[0x20]) || '–');
+  if (r[0x21]) setTxt('desc', ascii(r[0x21]) || '–');
+  if (r[0x22]) setTxt('cellType', ascii(r[0x22]) || '–');
+  if (r[0x23]) {
+    // Numéro tronqué à 16 caractères par le BMS : afficher le numéro complet s'il est connu
+    let sn = ascii(r[0x23]);
+    const full = [transport && transport.bleName, store.get('sn')].map(normSn).find(x => x && sn && x.length > sn.length && x.startsWith(normSn(sn)));
+    setTxt('sn', full || sn || '–');
+  }
+  if (r[0x26]) {
+    const a = r[0x26];
+    setTxt('hMaxDis', (i32(a, 0) / 1000).toFixed(1) + ' A');
+    setTxt('hMaxChg', (i32(a, 4) / 1000).toFixed(1) + ' A');
+    setTxt('hCellMax', (u16(a, 8) / 1000).toFixed(3) + ' V');
+    setTxt('hCellMin', (u16(a, 10) / 1000).toFixed(3) + ' V');
+    setTxt('hTMax', i8(a, 12) + ' °C');
+    setTxt('hTMin', i8(a, 13) + ' °C');
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Numéro de série                                                    *
+ * ------------------------------------------------------------------ */
+// sn       : numéro saisi par l'utilisateur
+// bleName  : nom Bluetooth appris lors d'une connexion où le n° de série lu correspondait
+const savedSn = () => normSn(store.get('sn'));
+function snFilters() {
+  const sn = savedSn();
+  if (!sn) return null;
+  const f = [];
+  const learned = store.get('bleName');
+  if (learned) f.push({ name: learned });
+  f.push({ name: sn }, { namePrefix: sn.slice(0, Math.min(sn.length, 12)) });
+  return f;
+}
+function updateSnHint() {
+  const sn = savedSn(), learned = store.get('bleName');
+  setTxt('snHint', !sn ? t('snHintEmpty') : learned ? t('snHintLearned', { name: learned }) : t('snHintSet'));
+}
+function checkSerial(r) {
+  const want = savedSn();
+  const box = $('snWarn');
+  box.classList.add('hidden');
+  if (!want || !r[0x23] || !transport || !transport.bleName) return;
+  const got = normSn(ascii(r[0x23]));
+  if (!got) return;
+  // Le BMS ne stocke que 16 caractères : « FV1AT09626780052 » pour « FV1AT096267800529 ».
+  const same = got.length >= 12 && (want.startsWith(got) || got.startsWith(want));
+  if (same) {
+    if (store.get('bleName') !== transport.bleName) { store.set('bleName', transport.bleName); updateSnHint(); log(`Learned BLE name: ${transport.bleName}`); }
+  } else {
+    box.textContent = t('snMismatch', { got, want });
+    box.classList.remove('hidden');
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  Interface                                                         *
+ * ------------------------------------------------------------------ */
+const logLines = [];
+function log(msg) {
+  const tm = new Date().toLocaleTimeString('fr-CA', { hour12: false });
+  logLines.push(`${tm}  ${msg}`);
+  if (logLines.length > 400) logLines.splice(0, logLines.length - 400);
+  const el = $('log');
+  el.textContent = logLines.join('\n');
+  el.scrollTop = el.scrollHeight;
+}
+const showFrames = () => $('chkFrames').checked;
+
+let stateKey = 'stDisconnected', stateVars = null, stateKind = 'off';
+function setState(kind, key, vars) {
+  stateKind = kind; stateKey = key; stateVars = vars;
+  $('dot').className = 'dot' + (kind === 'on' ? ' on' : kind === 'busy' ? ' busy' : '');
+  setTxt('status', t(key, vars));
+  const on = kind !== 'off';
+  $('btnConnect').classList.toggle('hidden', on);
+  $('btnDisconnect').classList.toggle('hidden', !on);
+}
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.title = t('title');
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (el.tagName === 'H1') el.firstChild.nodeValue = t(k);
+    else el.textContent = t(k);
+  });
+  $('btnLang').textContent = lang === 'fr' ? 'EN' : 'FR';
+  setTxt('status', t(stateKey, stateVars));
+  updateSnHint();
+  if (!navigator.bluetooth) $('noBle').innerHTML = /iPhone|iPad|iPod/.test(navigator.userAgent) ? t('noBleIOS') : t('noBle');
+  if (lastFast) renderFast(lastFast);
+  if (lastSlow) renderSlow(lastSlow);
+  if (!lastFast) $('alarms').innerHTML = `<div class="alarm ok">${t('noAlarm')}</div>`;
+}
+
+let wakeLock = null;
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+    else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
+  } catch (_) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && polling) keepAwake(true); });
+
+async function start(tr) {
+  transport = tr;
+  lastFast = lastSlow = null;
+  $('snWarn').classList.add('hidden');
+  setState('busy', 'stConnecting');
+  try {
+    const name = await tr.connect();
+    setTxt('devName', name);
+    tr.onDisconnect = () => stop('stLost');
+    $('welcome').classList.add('hidden');
+    $('dash').classList.remove('hidden');
+    setState('busy', 'stReading');
+    const slow = await readSet(SLOW);
+    renderSlow(slow);
+    checkSerial(slow);
+    polling = true;
+    keepAwake(true);
+    setState('on', 'stConnected', { name });
+    loop();
+  } catch (e) {
+    log(`Error: ${e.name} ${e.message}`);
+    if (e.name === 'NotFoundError') {
+      // Fenêtre fermée par l'utilisateur, ou aucun appareil correspondant au filtre
+      if (tr.filters && !/cancel/i.test(e.message)) alert(t('snNotFound'));
+    } else alert(t('connectFail') + e.message);
+    stop('stDisconnected');
+  }
+}
+
+async function loop() {
+  let slowCounter = 0;
+  while (polling && transport && transport.connected) {
+    const t0 = Date.now();
+    try {
+      renderFast(await readSet(FAST));
+      if (++slowCounter >= 30) { slowCounter = 0; renderSlow(await readSet([[0x17,4],[0x1D,6],[0x26,14]])); }
+    } catch (e) { log(`Error: ${e.message}`); }
+    await new Promise(r => setTimeout(r, Math.max(300, 2000 - (Date.now() - t0))));
+  }
+}
+
+function stop(key) {
+  polling = false;
+  keepAwake(false);
+  if (transport) { const tr = transport; transport = null; tr.onDisconnect = null; try { tr.disconnect(); } catch (_) {} }
+  setState('off', key || 'stDisconnected');
+  $('welcome').classList.remove('hidden');
+}
+
+$('snInput').value = store.get('sn') || '';
+$('snInput').addEventListener('input', (e) => {
+  const v = normSn(e.target.value);
+  if (v !== savedSn()) { store.set('sn', v || null); store.set('bleName', null); }
+  updateSnHint();
+});
+$('btnConnect').onclick = () => { if (navigator.bluetooth) start(new BleTransport(snFilters())); };
+$('btnList').onclick = () => { if (navigator.bluetooth) start(new BleTransport(null)); };
+$('btnDemo').onclick = () => start(new DemoTransport());
+$('btnDisconnect').onclick = () => stop('stDisconnected');
+$('btnLang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; store.set('lang', lang); applyLang(); };
+$('btnClearLog').onclick = () => { logLines.length = 0; $('log').textContent = ''; };
+$('btnCopyLog').onclick = async () => {
+  try { await navigator.clipboard.writeText(logLines.join('\n')); log('Log copied.'); }
+  catch (_) { log('Copy failed: select the text manually.'); }
+};
+
+if (!navigator.bluetooth) {
+  $('noBle').classList.remove('hidden');
+  $('btnConnect').disabled = true;
+  $('btnList').disabled = true;
+}
+
+applyLang();
+setState('off', 'stDisconnected');
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+log('Ready.');
+</script>
+</body>
+</html>
